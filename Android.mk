@@ -23,3 +23,9 @@ LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_PATH := $(TARGET_OUT)/fake_packages/$(LOCAL_SRC_FILES)
 
 include $(BUILD_PREBUILT)
+
+include $(CLEAR_VARS)
+LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := \
+    play:google_play_services/libproject/google-play-services_lib/libs/google-play-services.jar
+
+include $(BUILD_MULTI_PREBUILT)
