@@ -14,10 +14,10 @@
 
 LOCAL_PATH:= $(call my-dir)
 
+include #(CLEAR_VARS)
 
-include $(CLEAR_VARS)
-LOCAL_SRC_FILES := analytics_sdk_v2/libGoogleAnalyticsV2$(COMMON_JAVA_PACKAGE_SUFFIX)
-LOCAL_MODULE := libGoogleAnalyticsV2
+LOCAL_SRC_FILES := analytics_sdk_v3/libGoogleAnalyticsV3$(COMMON_JAVA_PACKAGE_SUFFIX)
+LOCAL_MODULE := libGoogleAnalyticsV3
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_MODULE_PATH := $(TARGET_OUT)/fake_packages/$(LOCAL_SRC_FILES)
