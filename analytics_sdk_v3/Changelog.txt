@@ -1,6 +1,44 @@
 Google Analytics SDK for Android Changelog
 
 --------------------------------------------
+Version: 3.02 (March 2014)
+--------------------------------------------
+* No changes
+
+--------------------------------------------
+Version: 3.01 (September 2013)
+--------------------------------------------
+* Second release of version 3.0.
+* Made change required to avoid a runtime exception when an app targeting
+  KitKat uses the SDK.
+
+--------------------------------------------
+Version: 3.00 (August 2013)
+--------------------------------------------
+* First release of version 3.0
+* SDK API rewritten to more closely align with analytics.js.  See javadoc and
+  https://developers.google.com/analytics/devguides/collection/android/v3/
+  for details.
+* All track<hittype> and send<hittype> methods removed.  Instead, you can use
+  the send method and the corresponding construct methods in the MapBuilder
+  class to send hits. See the class Fields for a list of constants you can use
+  to build hits using set and send.
+* Many of the various properties have also been removed, including useHttps,
+  anonymizeIp, etc.  You can set/reset those properties using the set command.
+* EasyTracker now extends Tracker.  There is no need to call
+  EasyTracker.getTracker to make tracking calls directly.
+* The SDK no longer sets the session control flag to start on startup.
+  Developers are now responsible for determining if a new session is needed.
+  Note that EasyTracker still handles session management as before.
+* The SDK now supports a custom logging class.  See Logger in the javadoc for
+  details.
+* Dryrun mode has been added.
+* Clientid can now be read.  Simply call tracker.get(Fields.CLIENT_ID).  This
+  call will block until the clientid has been loaded from the persistent store.
+* The SDK will no longer retry hits based on the HTTP response code.
+* The log tag was updated from "GAV2" to "GAV3".
+
+--------------------------------------------
 Version: 2.0beta5 (April 2013)
 --------------------------------------------
 * Fifth beta release.
@@ -24,6 +62,8 @@ Version: 2.0beta4 (January 2013)
 * Removed TrackedActivity classes from the SDK.
 * Move SDK initialization off the main UI Thread.
 * Improve the SDK's ability to recover from a corrupted SQLite database.
+* AnalyticsReceiver renamed CampaignTrackingReceiver (also added
+  CampaignTrackingService class, see javadoc for details).
 * Several other crashes and bugs fixed.
 
 --------------------------------------------

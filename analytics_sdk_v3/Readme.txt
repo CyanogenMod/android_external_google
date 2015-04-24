@@ -1,6 +1,6 @@
-Google Analytics Android SDK version 2.0 beta 4
+Google Analytics Android SDK version 3.02
 
-Copyright 2009 - 2013 Google, Inc. All rights reserved.
+Copyright 2009-2014 Google, Inc. All rights reserved.
 
 ================================================================================
 DESCRIPTION:
@@ -13,7 +13,7 @@ Changelog.txt and this file (Readme.txt).
 
 Details on how to use this SDK can be found at:
 
-   http://developers.google.com/analytics/devguides/collection/android/v2.
+   http://developers.google.com/analytics/devguides/collection/android/v3/.
 
 ================================================================================
 BUILD REQUIREMENTS:
@@ -28,7 +28,7 @@ Android SDK 2.1+
 ================================================================================
 PACKAGING LIST:
 
-libGoogleAnalyticsV2.jar
+libGoogleAnalyticsV3.jar (in root directory)
 javadocs.zip
 Changelog.txt
 Readme.txt
