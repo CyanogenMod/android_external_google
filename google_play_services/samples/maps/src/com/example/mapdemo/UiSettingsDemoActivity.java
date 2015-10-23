@@ -17,6 +17,7 @@
 package com.example.mapdemo;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 
@@ -29,7 +30,7 @@ import android.widget.Toast;
 /**
  * This shows how UI settings can be toggled.
  */
-public class UiSettingsDemoActivity extends FragmentActivity {
+public class UiSettingsDemoActivity extends FragmentActivity implements OnMapReadyCallback {
     private GoogleMap mMap;
     private UiSettings mUiSettings;
 
@@ -37,25 +38,10 @@ public class UiSettingsDemoActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.ui_settings_demo);
-        setUpMapIfNeeded();
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        setUpMapIfNeeded();
-
-        if (mMap != null) {
-            // Keep the UI Settings state in sync with the checkboxes.
-            mUiSettings.setZoomControlsEnabled(isChecked(R.id.zoom_buttons_toggle));
-            mUiSettings.setCompassEnabled(isChecked(R.id.compass_toggle));
-            mUiSettings.setMyLocationButtonEnabled(isChecked(R.id.mylocationbutton_toggle));
-            mMap.setMyLocationEnabled(isChecked(R.id.mylocationlayer_toggle));
-            mUiSettings.setScrollGesturesEnabled(isChecked(R.id.scroll_toggle));
-            mUiSettings.setZoomGesturesEnabled(isChecked(R.id.zoom_gestures_toggle));
-            mUiSettings.setTiltGesturesEnabled(isChecked(R.id.tilt_toggle));
-            mUiSettings.setRotateGesturesEnabled(isChecked(R.id.rotate_toggle));
-        }
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     /**
@@ -65,22 +51,22 @@ public class UiSettingsDemoActivity extends FragmentActivity {
       return ((CheckBox) findViewById(id)).isChecked();
     }
 
-    private void setUpMapIfNeeded() {
-        // Do a null check to confirm that we have not already instantiated the map.
-        if (mMap == null) {
-            // Try to obtain the map from the SupportMapFragment.
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-            // Check if we were successful in obtaining the map.
-            if (mMap != null) {
-                setUpMap();
-            }
-        }
-    }
+    @Override
+    public void onMapReady(GoogleMap map) {
+        mMap = map;
 
-    private void setUpMap() {
         mMap.setMyLocationEnabled(true);
         mUiSettings = mMap.getUiSettings();
+
+        // Keep the UI Settings state in sync with the checkboxes.
+        mUiSettings.setZoomControlsEnabled(isChecked(R.id.zoom_buttons_toggle));
+        mUiSettings.setCompassEnabled(isChecked(R.id.compass_toggle));
+        mUiSettings.setMyLocationButtonEnabled(isChecked(R.id.mylocationbutton_toggle));
+        mMap.setMyLocationEnabled(isChecked(R.id.mylocationlayer_toggle));
+        mUiSettings.setScrollGesturesEnabled(isChecked(R.id.scroll_toggle));
+        mUiSettings.setZoomGesturesEnabled(isChecked(R.id.zoom_gestures_toggle));
+        mUiSettings.setTiltGesturesEnabled(isChecked(R.id.tilt_toggle));
+        mUiSettings.setRotateGesturesEnabled(isChecked(R.id.rotate_toggle));
     }
 
     /**

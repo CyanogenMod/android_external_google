@@ -18,6 +18,7 @@ package com.example.mapdemo;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
@@ -32,7 +33,9 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 /**
  * This shows how to draw polylines on a map.
  */
-public class PolylineDemoActivity extends FragmentActivity implements OnSeekBarChangeListener {
+public class PolylineDemoActivity extends FragmentActivity
+        implements OnSeekBarChangeListener, OnMapReadyCallback {
+
     private static final LatLng MELBOURNE = new LatLng(-37.81319, 144.96298);
     private static final LatLng SYDNEY = new LatLng(-33.87365, 151.20689);
     private static final LatLng ADELAIDE = new LatLng(-34.92873, 138.59995);
@@ -47,7 +50,6 @@ public class PolylineDemoActivity extends FragmentActivity implements OnSeekBarC
     private static final int HUE_MAX = 360;
     private static final int ALPHA_MAX = 255;
 
-    private GoogleMap mMap;
     private Polyline mMutablePolyline;
     private SeekBar mColorBar;
     private SeekBar mAlphaBar;
@@ -70,53 +72,39 @@ public class PolylineDemoActivity extends FragmentActivity implements OnSeekBarC
         mWidthBar.setMax(WIDTH_MAX);
         mWidthBar.setProgress(10);
 
-        setUpMapIfNeeded();
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        setUpMapIfNeeded();
-    }
-
-    private void setUpMapIfNeeded() {
-        // Do a null check to confirm that we have not already instantiated the map.
-        if (mMap == null) {
-            // Try to obtain the map from the SupportMapFragment.
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-            // Check if we were successful in obtaining the map.
-            if (mMap != null) {
-                setUpMap();
-            }
-        }
-    }
-
-    private void setUpMap() {
+    public void onMapReady(GoogleMap map) {
+        // Override the default content description on the view, for accessibility mode.
+        // Ideally this string would be localised.
+        map.setContentDescription("Google Map with polylines.");
 
         // A simple polyline with the default options from Melbourne-Adelaide-Perth.
-        mMap.addPolyline((new PolylineOptions())
+        map.addPolyline((new PolylineOptions())
                 .add(MELBOURNE, ADELAIDE, PERTH));
 
         // A geodesic polyline that goes around the world.
-        mMap.addPolyline((new PolylineOptions())
+        map.addPolyline((new PolylineOptions())
                 .add(LHR, AKL, LAX, JFK, LHR)
                 .width(5)
                 .color(Color.BLUE)
                 .geodesic(true));
 
-        // Circle centered at Sydney.  This polyline will be mutable.
-        PolylineOptions options = new PolylineOptions();
+        // Rectangle centered at Sydney.  This polyline will be mutable.
         int radius = 5;
-        int numPoints = 100;
-        double phase = 2 * Math.PI / numPoints;
-        for (int i = 0; i <= numPoints; i++) {
-            options.add(new LatLng(SYDNEY.latitude + radius * Math.sin(i * phase),
-                    SYDNEY.longitude + radius * Math.cos(i * phase)));
-        }
+        PolylineOptions options = new PolylineOptions()
+                .add(new LatLng(SYDNEY.latitude + radius, SYDNEY.longitude + radius))
+                .add(new LatLng(SYDNEY.latitude + radius, SYDNEY.longitude - radius))
+                .add(new LatLng(SYDNEY.latitude - radius, SYDNEY.longitude - radius))
+                .add(new LatLng(SYDNEY.latitude - radius, SYDNEY.longitude + radius))
+                .add(new LatLng(SYDNEY.latitude + radius, SYDNEY.longitude + radius));
         int color = Color.HSVToColor(
                 mAlphaBar.getProgress(), new float[] {mColorBar.getProgress(), 1, 1});
-        mMutablePolyline = mMap.addPolyline(options
+        mMutablePolyline = map.addPolyline(options
                 .color(color)
                 .width(mWidthBar.getProgress()));
 
@@ -125,7 +113,7 @@ public class PolylineDemoActivity extends FragmentActivity implements OnSeekBarC
         mWidthBar.setOnSeekBarChangeListener(this);
 
         // Move the map so that it is centered on the mutable polyline.
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(SYDNEY));
+        map.moveCamera(CameraUpdateFactory.newLatLng(SYDNEY));
     }
 
     @Override

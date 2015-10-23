@@ -22,6 +22,7 @@ import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter;
 import com.google.android.gms.maps.GoogleMap.OnInfoWindowClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -42,18 +43,29 @@ import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.animation.BounceInterpolator;
 import android.view.animation.Interpolator;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
+import android.widget.RadioGroup.OnCheckedChangeListener;
+import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
  * This shows how to place markers on a map.
  */
-public class MarkerDemoActivity extends FragmentActivity
-        implements OnMarkerClickListener, OnInfoWindowClickListener, OnMarkerDragListener {
+public class MarkerDemoActivity extends FragmentActivity implements
+        OnMarkerClickListener,
+        OnInfoWindowClickListener,
+        OnMarkerDragListener,
+        OnSeekBarChangeListener,
+        OnMapReadyCallback {
+
     private static final LatLng BRISBANE = new LatLng(-27.47093, 153.0235);
     private static final LatLng MELBOURNE = new LatLng(-37.81319, 144.96298);
     private static final LatLng SYDNEY = new LatLng(-33.87365, 151.20689);
@@ -62,8 +74,6 @@ public class MarkerDemoActivity extends FragmentActivity
 
     /** Demonstrates customizing the info window and/or its contents. */
     class CustomInfoWindowAdapter implements InfoWindowAdapter {
-        private final RadioGroup mOptions;
-
         // These a both viewgroups containing an ImageView with id "badge" and two TextViews with id
         // "title" and "snippet".
         private final View mWindow;
@@ -72,7 +82,6 @@ public class MarkerDemoActivity extends FragmentActivity
         CustomInfoWindowAdapter() {
             mWindow = getLayoutInflater().inflate(R.layout.custom_info_window, null);
             mContents = getLayoutInflater().inflate(R.layout.custom_info_contents, null);
-            mOptions = (RadioGroup) findViewById(R.id.custom_info_window_options);
         }
 
         @Override
@@ -145,7 +154,21 @@ public class MarkerDemoActivity extends FragmentActivity
     private Marker mBrisbane;
     private Marker mAdelaide;
     private Marker mMelbourne;
+
+    /**
+     * Keeps track of the last selected marker (though it may no longer be selected).  This is
+     * useful for refreshing the info window.
+     */
+    private Marker mLastSelectedMarker;
+
+    private final List<Marker> mMarkerRainbow = new ArrayList<Marker>();
+
     private TextView mTopText;
+    private SeekBar mRotationBar;
+    private CheckBox mFlatBox;
+    private RadioGroup mOptions;
+
+    private final Random mRandom = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -154,29 +177,32 @@ public class MarkerDemoActivity extends FragmentActivity
 
         mTopText = (TextView) findViewById(R.id.top_text);
 
-        setUpMapIfNeeded();
+        mRotationBar = (SeekBar) findViewById(R.id.rotationSeekBar);
+        mRotationBar.setMax(360);
+        mRotationBar.setOnSeekBarChangeListener(this);
+
+        mFlatBox = (CheckBox) findViewById(R.id.flat);
+
+        mOptions = (RadioGroup) findViewById(R.id.custom_info_window_options);
+        mOptions.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+          @Override
+          public void onCheckedChanged(RadioGroup group, int checkedId) {
+            if (mLastSelectedMarker != null && mLastSelectedMarker.isInfoWindowShown()) {
+              // Refresh the info window when the info window's content has changed.
+              mLastSelectedMarker.showInfoWindow();
+            }
+          }
+        });
+
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        setUpMapIfNeeded();
-    }
+    public void onMapReady(GoogleMap map) {
+        mMap = map;
 
-    private void setUpMapIfNeeded() {
-        // Do a null check to confirm that we have not already instantiated the map.
-        if (mMap == null) {
-            // Try to obtain the map from the SupportMapFragment.
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-            // Check if we were successful in obtaining the map.
-            if (mMap != null) {
-                setUpMap();
-            }
-        }
-    }
-
-    private void setUpMap() {
         // Hide the zoom controls as the button panel will cover it.
         mMap.getUiSettings().setZoomControlsEnabled(false);
 
@@ -191,6 +217,10 @@ public class MarkerDemoActivity extends FragmentActivity
         mMap.setOnMarkerClickListener(this);
         mMap.setOnInfoWindowClickListener(this);
         mMap.setOnMarkerDragListener(this);
+
+        // Override the default content description on the view, for accessibility mode.
+        // Ideally this string would be localised.
+        map.setContentDescription("Map with lots of markers.");
 
         // Pan to see all markers in view.
         // Cannot zoom to bounds until the map has a size.
@@ -227,12 +257,13 @@ public class MarkerDemoActivity extends FragmentActivity
                 .snippet("Population: 2,074,200")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
 
-        // Uses a custom icon.
+        // Uses a custom icon with the info window popping out of the center of the icon.
         mSydney = mMap.addMarker(new MarkerOptions()
                 .position(SYDNEY)
                 .title("Sydney")
                 .snippet("Population: 4,627,300")
-                .icon(BitmapDescriptorFactory.fromResource(R.drawable.arrow)));
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.arrow))
+                .infoWindowAnchor(0.5f, 0.5f));
 
         // Creates a draggable marker. Long press to drag.
         mMelbourne = mMap.addMarker(new MarkerOptions()
@@ -253,14 +284,19 @@ public class MarkerDemoActivity extends FragmentActivity
 
         // Creates a marker rainbow demonstrating how to create default marker icons of different
         // hues (colors).
+        float rotation = mRotationBar.getProgress();
+        boolean flat = mFlatBox.isChecked();
+
         int numMarkersInRainbow = 12;
         for (int i = 0; i < numMarkersInRainbow; i++) {
-            mMap.addMarker(new MarkerOptions()
+            mMarkerRainbow.add(mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(
                             -30 + 10 * Math.sin(i * Math.PI / (numMarkersInRainbow - 1)),
                             135 - 10 * Math.cos(i * Math.PI / (numMarkersInRainbow - 1))))
                     .title("Marker " + i)
-                    .icon(BitmapDescriptorFactory.defaultMarker(i * 360 / numMarkersInRainbow)));
+                    .icon(BitmapDescriptorFactory.defaultMarker(i * 360 / numMarkersInRainbow))
+                    .flat(flat)
+                    .rotation(rotation)));
         }
     }
 
@@ -290,6 +326,38 @@ public class MarkerDemoActivity extends FragmentActivity
         addMarkersToMap();
     }
 
+    /** Called when the Reset button is clicked. */
+    public void onToggleFlat(View view) {
+        if (!checkReady()) {
+            return;
+        }
+        boolean flat = mFlatBox.isChecked();
+        for (Marker marker : mMarkerRainbow) {
+            marker.setFlat(flat);
+        }
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if (!checkReady()) {
+            return;
+        }
+        float rotation = seekBar.getProgress();
+        for (Marker marker : mMarkerRainbow) {
+            marker.setRotation(rotation);
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+        // Do nothing.
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+        // Do nothing.
+    }
+
     //
     // Marker related listeners.
     //
@@ -308,8 +376,8 @@ public class MarkerDemoActivity extends FragmentActivity
                 @Override
                 public void run() {
                     long elapsed = SystemClock.uptimeMillis() - start;
-                    float t = Math.max(1 - interpolator
-                            .getInterpolation((float) elapsed / duration), 0);
+                    float t = Math.max(
+                            1 - interpolator.getInterpolation((float) elapsed / duration), 0);
                     marker.setAnchor(0.5f, 1.0f + 2 * t);
 
                     if (t > 0.0) {
@@ -319,9 +387,12 @@ public class MarkerDemoActivity extends FragmentActivity
                 }
             });
         } else if (marker.equals(mAdelaide)) {
-            // This causes the marker at Adelaide to change color.
-            marker.setIcon(BitmapDescriptorFactory.defaultMarker(new Random().nextFloat() * 360));
+            // This causes the marker at Adelaide to change color and alpha.
+            marker.setIcon(BitmapDescriptorFactory.defaultMarker(mRandom.nextFloat() * 360));
+            marker.setAlpha(mRandom.nextFloat());
         }
+
+        mLastSelectedMarker = marker;
         // We return false to indicate that we have not consumed the event and that we wish
         // for the default behavior to occur (which is for the camera to move such that the
         // marker is centered and for the marker's info window to open, if it has one).
@@ -330,7 +401,7 @@ public class MarkerDemoActivity extends FragmentActivity
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-        Toast.makeText(getBaseContext(), "Click Info Window", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Click Info Window", Toast.LENGTH_SHORT).show();
     }
 
     @Override

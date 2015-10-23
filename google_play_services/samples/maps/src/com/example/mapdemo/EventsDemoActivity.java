@@ -20,6 +20,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnCameraChangeListener;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -32,9 +33,9 @@ import android.widget.TextView;
  * This shows how to listen to some {@link GoogleMap} events.
  */
 public class EventsDemoActivity extends FragmentActivity
-        implements OnMapClickListener, OnMapLongClickListener, OnCameraChangeListener {
+        implements OnMapClickListener, OnMapLongClickListener, OnCameraChangeListener,
+                OnMapReadyCallback {
 
-    private GoogleMap mMap;
     private TextView mTapTextView;
     private TextView mCameraTextView;
 
@@ -46,29 +47,16 @@ public class EventsDemoActivity extends FragmentActivity
         mTapTextView = (TextView) findViewById(R.id.tap_text);
         mCameraTextView = (TextView) findViewById(R.id.camera_text);
 
-        setUpMapIfNeeded();
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        setUpMapIfNeeded();
-    }
-
-    private void setUpMapIfNeeded() {
-        if (mMap == null) {
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-            if (mMap != null) {
-                setUpMap();
-            }
-        }
-    }
-
-    private void setUpMap() {
-        mMap.setOnMapClickListener(this);
-        mMap.setOnMapLongClickListener(this);
-        mMap.setOnCameraChangeListener(this);
+    public void onMapReady(GoogleMap map) {
+        map.setOnMapClickListener(this);
+        map.setOnMapLongClickListener(this);
+        map.setOnCameraChangeListener(this);
     }
 
     @Override

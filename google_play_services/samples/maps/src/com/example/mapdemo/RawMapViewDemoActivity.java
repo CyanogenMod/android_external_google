@@ -18,6 +18,7 @@ package com.example.mapdemo;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -28,9 +29,9 @@ import android.support.v4.app.FragmentActivity;
  * This shows how to create a simple activity with a raw MapView and add a marker to it. This
  * requires forwarding all the important lifecycle methods onto MapView.
  */
-public class RawMapViewDemoActivity extends FragmentActivity {
+public class RawMapViewDemoActivity extends FragmentActivity implements OnMapReadyCallback {
+
     private MapView mMapView;
-    private GoogleMap mMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,28 +41,18 @@ public class RawMapViewDemoActivity extends FragmentActivity {
         mMapView = (MapView) findViewById(R.id.map);
         mMapView.onCreate(savedInstanceState);
 
-        setUpMapIfNeeded();
+        mMapView.getMapAsync(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         mMapView.onResume();
-
-        setUpMapIfNeeded();
     }
 
-    private void setUpMapIfNeeded() {
-        if (mMap == null) {
-            mMap = ((MapView) findViewById(R.id.map)).getMap();
-            if (mMap != null) {
-                setUpMap();
-            }
-        }
-    }
-
-    private void setUpMap() {
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+    @Override
+    public void onMapReady(GoogleMap map) {
+        map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
 
     @Override

@@ -18,7 +18,9 @@ package com.example.mapdemo;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
@@ -26,20 +28,28 @@ import com.google.android.gms.maps.model.LatLng;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.View;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This shows how to add a ground overlay to a map.
  */
-public class GroundOverlayDemoActivity extends FragmentActivity implements OnSeekBarChangeListener {
+public class GroundOverlayDemoActivity extends FragmentActivity
+        implements OnSeekBarChangeListener, OnMapReadyCallback {
 
     private static final int TRANSPARENCY_MAX = 100;
     private static final LatLng NEWARK = new LatLng(40.714086, -74.228697);
 
-    private GoogleMap mMap;
+    private final List<BitmapDescriptor> mImages = new ArrayList<BitmapDescriptor>();
+
     private GroundOverlay mGroundOverlay;
     private SeekBar mTransparencyBar;
+
+    private int mCurrentEntry = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,33 +60,29 @@ public class GroundOverlayDemoActivity extends FragmentActivity implements OnSee
         mTransparencyBar.setMax(TRANSPARENCY_MAX);
         mTransparencyBar.setProgress(0);
 
-        setUpMapIfNeeded();
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        setUpMapIfNeeded();
-    }
+    public void onMapReady(GoogleMap map) {
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(NEWARK, 11));
 
-    private void setUpMapIfNeeded() {
-        if (mMap == null) {
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-            if (mMap != null) {
-                setUpMap();
-            }
-        }
-    }
+        mImages.clear();
+        mImages.add(BitmapDescriptorFactory.fromResource(R.drawable.newark_nj_1922));
+        mImages.add(BitmapDescriptorFactory.fromResource(R.drawable.newark_prudential_sunny));
 
-    private void setUpMap() {
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(NEWARK, 11));
-
-        mGroundOverlay = mMap.addGroundOverlay(new GroundOverlayOptions()
-                .image(BitmapDescriptorFactory.fromResource(R.drawable.newark_nj_1922)).anchor(0, 1)
+        mCurrentEntry = 0;
+        mGroundOverlay = map.addGroundOverlay(new GroundOverlayOptions()
+                .image(mImages.get(mCurrentEntry)).anchor(0, 1)
                 .position(NEWARK, 8600f, 6500f));
 
         mTransparencyBar.setOnSeekBarChangeListener(this);
+
+        // Override the default content description on the view, for accessibility mode.
+        // Ideally this string would be localised.
+        map.setContentDescription("Google Map with ground overlay.");
     }
 
     @Override
@@ -92,5 +98,10 @@ public class GroundOverlayDemoActivity extends FragmentActivity implements OnSee
         if (mGroundOverlay != null) {
             mGroundOverlay.setTransparency((float) progress / (float) TRANSPARENCY_MAX);
         }
+    }
+
+    public void switchImage(View view) {
+        mCurrentEntry = (mCurrentEntry + 1) % mImages.size();
+        mGroundOverlay.setImage(mImages.get(mCurrentEntry));
     }
 }

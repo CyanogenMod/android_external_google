@@ -19,6 +19,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerDragListener;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
@@ -44,7 +45,7 @@ import java.util.List;
  * This shows how to draw circles on a map.
  */
 public class CircleDemoActivity extends FragmentActivity implements OnSeekBarChangeListener,
-        OnMarkerDragListener, OnMapLongClickListener {
+        OnMarkerDragListener, OnMapLongClickListener, OnMapReadyCallback {
     private static final LatLng SYDNEY = new LatLng(-33.87365, 151.20689);
     private static final double DEFAULT_RADIUS = 1000000;
     public static final double RADIUS_OF_EARTH_METERS = 6371009;
@@ -153,29 +154,19 @@ public class CircleDemoActivity extends FragmentActivity implements OnSeekBarCha
         mWidthBar.setMax(WIDTH_MAX);
         mWidthBar.setProgress(10);
 
-        setUpMapIfNeeded();
+        SupportMapFragment mapFragment =
+            (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        setUpMapIfNeeded();
-    }
+    public void onMapReady(GoogleMap map) {
+        mMap = map;
 
-    private void setUpMapIfNeeded() {
-        // Do a null check to confirm that we have not already instantiated the map.
-        if (mMap == null) {
-            // Try to obtain the map from the SupportMapFragment.
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-            // Check if we were successful in obtaining the map.
-            if (mMap != null) {
-                setUpMap();
-            }
-        }
-    }
+        // Override the default content description on the view, for accessibility mode.
+        // Ideally this string would be localised.
+        map.setContentDescription("Google Map with circles.");
 
-    private void setUpMap() {
         mColorBar.setOnSeekBarChangeListener(this);
         mAlphaBar.setOnSeekBarChangeListener(this);
         mWidthBar.setOnSeekBarChangeListener(this);

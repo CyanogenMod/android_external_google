@@ -17,6 +17,7 @@
 package com.example.mapdemo;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -28,11 +29,9 @@ import android.support.v4.app.FragmentTransaction;
 /**
  * Demonstrates how to instantiate a SupportMapFragment programmatically and add a marker to it.
  */
-public class ProgrammaticDemoActivity extends FragmentActivity {
+public class ProgrammaticDemoActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private static final String MAP_FRAGMENT_TAG = "map";
-    private GoogleMap mMap;
-    private SupportMapFragment mMapFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,47 +39,25 @@ public class ProgrammaticDemoActivity extends FragmentActivity {
 
         // It isn't possible to set a fragment's id programmatically so we set a tag instead and
         // search for it using that.
-        mMapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentByTag(MAP_FRAGMENT_TAG);
+        SupportMapFragment mapFragment = (SupportMapFragment)
+                getSupportFragmentManager().findFragmentByTag(MAP_FRAGMENT_TAG);
 
         // We only create a fragment if it doesn't already exist.
-        if (mMapFragment == null) {
+        if (mapFragment == null) {
             // To programmatically add the map, we first create a SupportMapFragment.
-            mMapFragment = SupportMapFragment.newInstance();
+            mapFragment = SupportMapFragment.newInstance();
 
             // Then we add it using a FragmentTransaction.
             FragmentTransaction fragmentTransaction =
                     getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.add(android.R.id.content, mMapFragment, MAP_FRAGMENT_TAG);
+            fragmentTransaction.add(android.R.id.content, mapFragment, MAP_FRAGMENT_TAG);
             fragmentTransaction.commit();
         }
-
-        // We can't be guaranteed that the map is available because Google Play services might
-        // not be available.
-        setUpMapIfNeeded();
+        mapFragment.getMapAsync(this);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        // In case Google Play services has since become available.
-        setUpMapIfNeeded();
-    }
-
-    private void setUpMapIfNeeded() {
-        // Do a null check to confirm that we have not already instantiated the map.
-        if (mMap == null) {
-            // Try to obtain the map from the SupportMapFragment.
-            mMap = mMapFragment.getMap();
-            // Check if we were successful in obtaining the map.
-            if (mMap != null) {
-                setUpMap();
-            }
-        }
-    }
-
-    private void setUpMap() {
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+    public void onMapReady(GoogleMap map) {
+        map.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
 }

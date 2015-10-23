@@ -19,6 +19,7 @@ package com.example.mapdemo;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.LocationSource;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -29,7 +30,8 @@ import android.support.v4.app.FragmentActivity;
 /**
  * This shows how to use a custom location source.
  */
-public class LocationSourceDemoActivity extends FragmentActivity {
+public class LocationSourceDemoActivity extends FragmentActivity implements OnMapReadyCallback {
+
     /**
      * A {@link LocationSource} which reports a new location whenever a user long presses the map at
      * the point at which a user long pressed the map.
@@ -73,12 +75,9 @@ public class LocationSourceDemoActivity extends FragmentActivity {
         public void onResume() {
             mPaused = false;
         }
-
     }
 
     private LongPressLocationSource mLocationSource;
-
-    private GoogleMap mMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,39 +86,27 @@ public class LocationSourceDemoActivity extends FragmentActivity {
 
         mLocationSource = new LongPressLocationSource();
 
-        setUpMapIfNeeded();
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        setUpMapIfNeeded();
-
         mLocationSource.onResume();
-    }
-
-    private void setUpMapIfNeeded() {
-        // Do a null check to confirm that we have not already instantiated the map.
-        if (mMap == null) {
-            // Try to obtain the map from the SupportMapFragment.
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-            // Check if we were successful in obtaining the map.
-            if (mMap != null) {
-                setUpMap();
-            }
-        }
-    }
-
-    private void setUpMap() {
-        mMap.setLocationSource(mLocationSource);
-        mMap.setOnMapLongClickListener(mLocationSource);
-        mMap.setMyLocationEnabled(true);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mLocationSource.onPause();
+    }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        map.setLocationSource(mLocationSource);
+        map.setOnMapLongClickListener(mLocationSource);
+        map.setMyLocationEnabled(true);
     }
 }

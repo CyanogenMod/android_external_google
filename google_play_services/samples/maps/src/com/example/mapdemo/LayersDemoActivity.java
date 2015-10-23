@@ -17,11 +17,13 @@
 package com.example.mapdemo;
 
 import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_HYBRID;
+import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_NONE;
 import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_NORMAL;
 import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_SATELLITE;
 import static com.google.android.gms.maps.GoogleMap.MAP_TYPE_TERRAIN;
 
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 
 import android.os.Bundle;
@@ -38,46 +40,47 @@ import android.widget.Toast;
 /**
  * Demonstrates the different base layers of a map.
  */
-public class LayersDemoActivity extends FragmentActivity implements OnItemSelectedListener {
+public class LayersDemoActivity extends FragmentActivity
+        implements OnItemSelectedListener, OnMapReadyCallback {
 
     private GoogleMap mMap;
 
     private CheckBox mTrafficCheckbox;
     private CheckBox mMyLocationCheckbox;
+    private CheckBox mBuildingsCheckbox;
+    private CheckBox mIndoorCheckbox;
+    private Spinner mSpinner;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.layers_demo);
 
-        Spinner spinner = (Spinner) findViewById(R.id.layers_spinner);
+        mSpinner = (Spinner) findViewById(R.id.layers_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this, R.array.layers_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
-        spinner.setOnItemSelectedListener(this);
+        mSpinner.setAdapter(adapter);
+        mSpinner.setOnItemSelectedListener(this);
 
         mTrafficCheckbox = (CheckBox) findViewById(R.id.traffic);
         mMyLocationCheckbox = (CheckBox) findViewById(R.id.my_location);
+        mBuildingsCheckbox = (CheckBox) findViewById(R.id.buildings);
+        mIndoorCheckbox = (CheckBox) findViewById(R.id.indoor);
 
-        setUpMapIfNeeded();
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        setUpMapIfNeeded();
-        if (mMap != null) {
-            updateTraffic();
-            updateMyLocation();
-        }
-    }
-
-    private void setUpMapIfNeeded() {
-        if (mMap == null) {
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
-        }
+    public void onMapReady(GoogleMap map) {
+        mMap = map;
+        updateMapType();
+        updateTraffic();
+        updateMyLocation();
+        updateBuildings();
+        updateIndoor();
     }
 
     private boolean checkReady() {
@@ -116,24 +119,61 @@ public class LayersDemoActivity extends FragmentActivity implements OnItemSelect
         mMap.setMyLocationEnabled(mMyLocationCheckbox.isChecked());
     }
 
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-        setLayer((String) parent.getItemAtPosition(position));
+    /**
+     * Called when the Buildings checkbox is clicked.
+     */
+    public void onBuildingsToggled(View view) {
+        updateBuildings();
     }
 
-    private void setLayer(String layerName) {
+    private void updateBuildings() {
         if (!checkReady()) {
             return;
         }
+        mMap.setBuildingsEnabled(mBuildingsCheckbox.isChecked());
+    }
+
+    /**
+     * Called when the Indoor checkbox is clicked.
+     */
+    public void onIndoorToggled(View view) {
+        updateIndoor();
+    }
+
+    private void updateIndoor() {
+        if (!checkReady()) {
+            return;
+        }
+        mMap.setIndoorEnabled(mIndoorCheckbox.isChecked());
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        updateMapType();
+    }
+
+    private void updateMapType() {
+        // No toast because this can also be called by the Android framework in onResume() at which
+        // point mMap may not be ready yet.
+        if (mMap == null) {
+          return;
+        }
+
+        String layerName = ((String) mSpinner.getSelectedItem());
         if (layerName.equals(getString(R.string.normal))) {
             mMap.setMapType(MAP_TYPE_NORMAL);
         } else if (layerName.equals(getString(R.string.hybrid))) {
             mMap.setMapType(MAP_TYPE_HYBRID);
+
+
+
+
         } else if (layerName.equals(getString(R.string.satellite))) {
             mMap.setMapType(MAP_TYPE_SATELLITE);
         } else if (layerName.equals(getString(R.string.terrain))) {
             mMap.setMapType(MAP_TYPE_TERRAIN);
+        } else if (layerName.equals(getString(R.string.none_map))) {
+            mMap.setMapType(MAP_TYPE_NONE);
         } else {
             Log.i("LDA", "Error setting layer with name " + layerName);
         }
